@@ -25,13 +25,14 @@ class _VfsClient:
         # firefox_options.add_argument("start-maximized")
         
         # following options reduce the RAM usage
-        firefox_options.add_argument("disable-infobars")
-        firefox_options.add_argument("--disable-extensions")
-        firefox_options.add_argument("--no-sandbox")
-        firefox_options.add_argument("--disable-application-cache")
-        firefox_options.add_argument("--disable-gpu")
-        firefox_options.add_argument("--disable-dev-shm-usage")
-        self._web_driver = webdriver.Firefox(options=firefox_options)
+        # firefox_options.add_argument("disable-infobars")
+        # firefox_options.add_argument("--disable-extensions")
+        # firefox_options.add_argument("--no-sandbox")
+        # firefox_options.add_argument("--disable-application-cache")
+        # firefox_options.add_argument("--disable-gpu")
+        # firefox_options.add_argument("--disable-dev-shm-usage")
+        firefox_options.binary_location = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'
+        self._web_driver = webdriver.Firefox(executable_path='S:\\Tools\\geckodriver\\geckodriver', options=firefox_options)
         
         # make sure that the browser is full screen, 
         # else some buttons will not be visible to selenium
@@ -94,40 +95,43 @@ class _VfsClient:
         self._web_driver.execute_script("arguments[0].click();", _visa_centre)
         time.sleep(5)
         
-        _category_dropdown = self._web_driver.find_element_by_xpath(
-            "//div[@id='mat-select-value-3']"
-        )
-        _category_dropdown.click()
-        time.sleep(5)
+        # category and sub category auto populated, no checks needed
+        logging.info("category and sub category auto populated, no checks needed for iceland visa appointment")
+
+        # _category_dropdown = self._web_driver.find_element_by_xpath(
+        #     "//div[@id='mat-select-value-3']"
+        # )
+        # _category_dropdown.click()
+        # time.sleep(5)
         
-        try:
-            _category = self._web_driver.find_element_by_xpath(
-                "//mat-option[starts-with(@id,'mat-option-')]/span[contains(text(), '{}')]".format(category)
-            )
-        except NoSuchElementException:
-            raise Exception("Category not found: {}".format(category))
+        # try:
+        #     _category = self._web_driver.find_element_by_xpath(
+        #         "//mat-option[starts-with(@id,'mat-option-')]/span[contains(text(), '{}')]".format(category)
+        #     )
+        # except NoSuchElementException:
+        #     raise Exception("Category not found: {}".format(category))
         
-        logging.debug("Category: " + _category.text)
-        self._web_driver.execute_script("arguments[0].click();", _category)
-        time.sleep(5)
+        # logging.debug("Category: " + _category.text)
+        # self._web_driver.execute_script("arguments[0].click();", _category)
+        # time.sleep(5)
         
-        _subcategory_dropdown = self._web_driver.find_element_by_xpath(
-            "//div[@id='mat-select-value-5']"
-        )
+        # _subcategory_dropdown = self._web_driver.find_element_by_xpath(
+        #     "//div[@id='mat-select-value-5']"
+        # )
      
-        self._web_driver.execute_script("arguments[0].click();", _subcategory_dropdown)
-        time.sleep(5)
+        # self._web_driver.execute_script("arguments[0].click();", _subcategory_dropdown)
+        # time.sleep(5)
         
-        try:
-            _subcategory = self._web_driver.find_element_by_xpath(
-                "//mat-option[starts-with(@id,'mat-option-')]/span[contains(text(), '{}')]".format(sub_category)
-            )
-        except NoSuchElementException:
-            raise Exception("Sub-category not found: {}".format(sub_category))
+        # try:
+        #     _subcategory = self._web_driver.find_element_by_xpath(
+        #         "//mat-option[starts-with(@id,'mat-option-')]/span[contains(text(), '{}')]".format(sub_category)
+        #     )
+        # except NoSuchElementException:
+        #     raise Exception("Sub-category not found: {}".format(sub_category))
         
-        self._web_driver.execute_script("arguments[0].click();", _subcategory)
-        logging.debug("Sub-Cat: " + _subcategory.text)
-        time.sleep(5)
+        # self._web_driver.execute_script("arguments[0].click();", _subcategory)
+        # logging.debug("Sub-Cat: " + _subcategory.text)
+        # time.sleep(5)
 
         # read contents of the text box
         return self._web_driver.find_element_by_xpath("//div[4]/div")
@@ -136,7 +140,7 @@ class _VfsClient:
         self._init_web_driver()
 
         # open the webpage
-        self._web_driver.get("https://visa.vfsglobal.com/ind/en/deu/login")
+        self._web_driver.get("https://visa.vfsglobal.com/gbr/en/isl/login")
 
         self._login()
         self._validate_login()
@@ -144,13 +148,15 @@ class _VfsClient:
         _message = self._get_appointment_date(visa_centre, category, sub_category)
         logging.debug("Message: " + _message.text)
 
-        if len(_message.text) != 0 and _message.text != "No appointment slots are currently available" and _message.text != "Currently No slots are available for selected category, please confirm waitlist\nTerms and Conditions":
+        if len(_message.text) != 0 and _message.text.startswith("No appointment slots are currently available") and _message.text != "Currently No slots are available for selected category, please confirm waitlist\nTerms and Conditions":
             logging.info("Appointment slots available: {}".format(_message.text))
             ts = time.time()
             st = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
             message = "{} at {}".format(_message.text, st)
             self._twilio_client.send_message(message)
             self._twilio_client.call()
+            logging.info("Message sent, next check in 2 hours")
+            time.sleep(60 * 60 * 2)
         else:
             logging.info("No slots available")
         # Close the browser
