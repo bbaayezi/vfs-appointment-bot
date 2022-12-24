@@ -1,0 +1,7 @@
+curl.exe -X POST "https://api.twilio.com/2010-04-01/Accounts/AC9ec6d37e43d0e4f91d79528c6cc3ae79/Messages.json" --data-urlencode "Body=Hello from Twilio" --data-urlencode "From=+18584221422" --data-urlencode "To=+447340614315" -u "AC9ec6d37e43d0e4f91d79528c6cc3ae79:5dda13cf67f678aaf249fe666f14ac1d"
+
+pip install -r requirements.txt
+
+python vfs_appointment_bot/vfs_appointment_bot.py 'Iceland Visa Application Center ,London' 'Short Stay' 'Short Stay VIsa'
+
+$env:Path = 'S:\Tools\geckodriver;' + $env:Path
